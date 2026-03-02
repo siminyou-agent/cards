@@ -191,6 +191,8 @@
     let selectedLetter = 'A';
     let cardQueue = [];
     let currentIndex = -1;
+    let decksData = [];
+    let cardsData = [];
 
     function applyTheme(theme) {
       const dark = theme === 'dark';
@@ -219,9 +221,19 @@
       }));
     }
 
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
     async function loadDecks() {
-      const decks = await fetch('/api/decks').then(r => r.json());
-      deckSelect.innerHTML = decks.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+      decksData = await fetch('data/decks.json').then(r => r.json());
+      cardsData = await fetch('data/cards.json').then(r => r.json());
+      deckSelect.innerHTML = decksData.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
       await loadCardSet();
     }
 
@@ -230,9 +242,16 @@
       if (!deckId) return;
       const minLen = Number(minLenEl.value);
       const maxLen = Number(maxLenEl.value);
-      const limit = countSelect.value;
-      const url = `/api/decks/${deckId}/cards?startsWith=${selectedLetter}&limit=${limit}&minLen=${minLen}&maxLen=${maxLen}`;
-      cardQueue = await fetch(url).then(r => r.json());
+      const limit = Number(countSelect.value);
+
+      cardQueue = shuffle(cardsData.filter(card => {
+        if (card.deck_id !== deckId) return false;
+        if (selectedLetter && !card.word.toUpperCase().startsWith(selectedLetter)) return false;
+        if (Number.isInteger(minLen) && minLen > 0 && card.word.length < minLen) return false;
+        if (Number.isInteger(maxLen) && maxLen > 0 && card.word.length > maxLen) return false;
+        return true;
+      })).slice(0, limit);
+
       currentIndex = -1;
       nextCard();
     }
