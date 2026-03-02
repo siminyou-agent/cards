@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phonics Cards MVP</title>
+  <style>
+    :root {
+      font-family: "Avenir Next", "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --bg: #f4f1ea;
+      --text: #2f2a25;
+      --muted: #736a61;
+      --surface: #f9f6f0;
+      --border: #d8d1c8;
+      --primary: #8a6f52;
+      --primaryText: #fffdfa;
+      --frontA: #d9c7b2;
+      --frontB: #cdb8a1;
+      --backA: #c3b09c;
+      --backB: #b49f89;
+      --shadow: 0 6px 18px rgba(70, 56, 40, 0.08);
+    }
+
+    body.dark {
+      --bg: #1f1b18;
+      --text: #ece5db;
+      --muted: #b5ab9f;
+      --surface: #2a2521;
+      --border: #3b342e;
+      --primary: #b29374;
+      --primaryText: #1f1b18;
+      --frontA: #5b5045;
+      --frontB: #4a4138;
+      --backA: #6a5d50;
+      --backB: #5b4f43;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); }
+    .app { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; padding: 16px; gap: 12px; }
+
+    select, button {
+      font-size: 14px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: none;
+    }
+
+    .top { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; }
+    .primary { background: var(--primary); color: var(--primaryText); border-color: var(--primary); }
+    .icon-btn { width: 38px; height: 38px; padding: 0; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }
+
+    .card-wrap { perspective: 1000px; }
+    .card {
+      position: relative; width: 100%; height: 58vh; min-height: 340px;
+      transform-style: preserve-3d; transition: transform .28s ease;
+      border-radius: 12px;
+    }
+    .card.flipped { transform: rotateY(180deg); }
+
+    .face {
+      position: absolute; inset: 0; backface-visibility: hidden;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 600; font-size: clamp(34px, 10vw, 52px);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .front { background: linear-gradient(135deg, var(--frontA), var(--frontB)); color: #2f2a25; }
+    .back {
+      background: linear-gradient(135deg, var(--backA), var(--backB));
+      color: #2f2a25;
+      transform: rotateY(180deg);
+      flex-direction: column; gap: 8px; padding: 20px; text-align: center;
+    }
+
+    body.dark .front, body.dark .back { color: #f4ece2; }
+
+    .meaning { font-size: clamp(26px, 8vw, 38px); }
+    .word-small { font-size: 17px; opacity: .95; }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px; }
+
+    .modal { position: fixed; inset: 0; background: rgba(20, 16, 12, .35); display: none; align-items: flex-end; justify-content: center; padding: 12px; z-index: 20; }
+    .modal.open { display: flex; }
+    .sheet { width: min(520px,100%); background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+    .sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .sheet-title { font-size: 13px; font-weight: 600; letter-spacing: .03em; color: var(--muted); text-transform: uppercase; }
+    .filters { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 10px; }
+    .range-group{border:1px solid var(--border);border-radius:8px;padding:8px 10px;background:var(--surface)}
+    .range-head{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;margin-bottom:8px}
+    .dual-range{position:relative;height:28px}
+    .track{position:absolute;left:0;right:0;top:12px;height:4px;background:var(--border);border-radius:999px}
+    .range-fill{position:absolute;top:12px;height:4px;background:var(--primary);border-radius:999px}
+    .dual-range input[type="range"]{position:absolute;left:0;right:0;top:0;width:100%;margin:0;background:transparent;pointer-events:none;-webkit-appearance:none;appearance:none}
+    .dual-range input[type="range"]::-webkit-slider-thumb{pointer-events:auto;-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;border:1px solid var(--primary);background:var(--surface)}
+    .dual-range input[type="range"]::-moz-range-thumb{pointer-events:auto;width:18px;height:18px;border-radius:50%;border:1px solid var(--primary);background:var(--surface)}
+    .dual-range input[type="range"]::-webkit-slider-runnable-track{height:4px;background:transparent}
+    .dual-range input[type="range"]::-moz-range-track{height:4px;background:transparent}
+    .alphabet { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 6px; }
+    .letter-btn { padding: 7px 0; border-radius: 8px; font-weight: 600; font-size: 13px; }
+    .letter-btn.active { background: var(--primary); color: var(--primaryText); border-color: var(--primary); }
+    .switch { display: flex; align-items: center; justify-content: space-between; margin: 8px 0 12px; color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="top">
+      <div></div>
+      <div></div>
+      <button id="settingsBtn" class="icon-btn" title="Settings">···</button>
+    </div>
+
+    <div class="card-wrap">
+      <div id="card" class="card">
+        <div class="face front" id="frontText">...</div>
+        <div class="face back">
+          <div class="meaning" id="backMeaning">...</div>
+          <div class="word-small" id="backWord"></div>
+          <div class="word-small" id="backExample"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <button id="prevBtn">Prev</button>
+      <button id="nextBtnBottom" class="primary">Next</button>
+      <button id="soundBtn">Sound</button>
+    </div>
+  </div>
+
+  <div class="modal" id="settingsModal">
+    <div class="sheet">
+      <div class="sheet-head">
+        <div class="sheet-title">Settings</div>
+        <button id="closeSettings" class="icon-btn">×</button>
+      </div>
+
+      <div class="switch">
+        <span>Dark mode</span>
+        <button id="themeToggle">Dark</button>
+      </div>
+
+      <div class="filters">
+        <select id="deckSelect"></select>
+        <div class="range-group">
+          <div class="range-head"><span>Word length</span><span id="lengthValue">2 - 8</span></div>
+          <div class="dual-range">
+            <div class="track"></div>
+            <div id="rangeFill" class="range-fill"></div>
+            <input id="minLen" type="range" min="1" max="10" value="2" />
+            <input id="maxLen" type="range" min="1" max="10" value="8" />
+          </div>
+        </div>
+        <select id="countSelect">
+          <option value="5">5 cards</option>
+          <option value="10" selected>10 cards</option>
+          <option value="15">15 cards</option>
+          <option value="20">20 cards</option>
+        </select>
+      </div>
+
+      <div class="alphabet" id="alphabet"></div>
+    </div>
+  </div>
+
+  <script>
+    const deckSelect = document.getElementById('deckSelect');
+    const cardEl = document.getElementById('card');
+    const frontText = document.getElementById('frontText');
+    const backMeaning = document.getElementById('backMeaning');
+    const backWord = document.getElementById('backWord');
+    const backExample = document.getElementById('backExample');
+
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModal = document.getElementById('settingsModal');
+    const closeSettings = document.getElementById('closeSettings');
+    const themeToggle = document.getElementById('themeToggle');
+
+    const alphabetEl = document.getElementById('alphabet');
+    const minLenEl = document.getElementById('minLen');
+    const maxLenEl = document.getElementById('maxLen');
+    const lengthValueEl = document.getElementById('lengthValue');
+    const rangeFill = document.getElementById('rangeFill');
+    const countSelect = document.getElementById('countSelect');
+
+    let selectedLetter = 'A';
+    let cardQueue = [];
+    let currentIndex = -1;
+
+    function applyTheme(theme) {
+      const dark = theme === 'dark';
+      document.body.classList.toggle('dark', dark);
+      themeToggle.textContent = dark ? 'Light' : 'Dark';
+    }
+    applyTheme(localStorage.getItem('theme') || 'light');
+
+    themeToggle.addEventListener('click', () => {
+      const next = document.body.classList.contains('dark') ? 'light' : 'dark';
+      localStorage.setItem('theme', next);
+      applyTheme(next);
+    });
+
+    settingsBtn.addEventListener('click', () => settingsModal.classList.add('open'));
+    closeSettings.addEventListener('click', () => settingsModal.classList.remove('open'));
+    settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) settingsModal.classList.remove('open'); });
+
+    function buildAlphabet() {
+      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+      alphabetEl.innerHTML = letters.map(l => `<button class="letter-btn ${l===selectedLetter?'active':''}" data-letter="${l}">${l}</button>`).join('');
+      alphabetEl.querySelectorAll('.letter-btn').forEach(btn => btn.addEventListener('click', async () => {
+        selectedLetter = btn.dataset.letter;
+        buildAlphabet();
+        await loadCardSet();
+      }));
+    }
+
+    async function loadDecks() {
+      const decks = await fetch('/api/decks').then(r => r.json());
+      deckSelect.innerHTML = decks.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+      await loadCardSet();
+    }
+
+    async function loadCardSet() {
+      const deckId = deckSelect.value;
+      if (!deckId) return;
+      const minLen = Number(minLenEl.value);
+      const maxLen = Number(maxLenEl.value);
+      const limit = countSelect.value;
+      const url = `/api/decks/${deckId}/cards?startsWith=${selectedLetter}&limit=${limit}&minLen=${minLen}&maxLen=${maxLen}`;
+      cardQueue = await fetch(url).then(r => r.json());
+      currentIndex = -1;
+      nextCard();
+    }
+
+
+    function prevCard() {
+      if (!cardQueue.length) return;
+      currentIndex = (currentIndex - 1 + cardQueue.length) % cardQueue.length;
+      const card = cardQueue[currentIndex];
+      cardEl.classList.remove('flipped');
+      frontText.textContent = card.word;
+      backMeaning.textContent = card.phonics || '(phonics pending)';
+      backWord.textContent = `Word: ${card.word}`;
+      backExample.textContent = `Sound-out: ${card.example || '(pending)'}`;
+    }
+
+    function nextCard() {
+      if (!cardQueue.length) {
+        cardEl.classList.remove('flipped');
+        frontText.textContent = `${selectedLetter}...`;
+        backMeaning.textContent = 'No cards for these filters';
+        backWord.textContent = 'Open settings and adjust';
+        backExample.textContent = '';
+        return;
+      }
+      currentIndex = (currentIndex + 1) % cardQueue.length;
+      const card = cardQueue[currentIndex];
+      cardEl.classList.remove('flipped');
+      frontText.textContent = card.word;
+      backMeaning.textContent = card.phonics || '(phonics pending)';
+      backWord.textContent = `Word: ${card.word}`;
+      backExample.textContent = `Sound-out: ${card.example || '(pending)'}`;
+    }
+
+    cardEl.addEventListener('click', () => cardEl.classList.toggle('flipped'));
+    document.getElementById('prevBtn').addEventListener('click', prevCard);
+    document.getElementById('nextBtnBottom').addEventListener('click', nextCard);
+    document.getElementById('soundBtn').addEventListener('click', () => {
+      const text = frontText.textContent?.trim();
+      if (!text || text === '...') return;
+      if ('speechSynthesis' in window) {
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'en-US';
+        u.rate = 0.85;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(u);
+      }
+    });
+    deckSelect.addEventListener('change', loadCardSet);
+    function syncLenLabel(){
+      let min = Number(minLenEl.value), max = Number(maxLenEl.value);
+      if (min > max) { const t=min; min=max; max=t; minLenEl.value=min; maxLenEl.value=max; }
+      lengthValueEl.textContent = `${min} - ${max}`;
+      const minV = Number(minLenEl.min), maxV = Number(minLenEl.max);
+      const left = ((min - minV) / (maxV - minV)) * 100;
+      const right = ((max - minV) / (maxV - minV)) * 100;
+      rangeFill.style.left = `${left}%`;
+      rangeFill.style.width = `${right - left}%`;
+    }
+    minLenEl.addEventListener('input', () => { syncLenLabel(); loadCardSet(); });
+    maxLenEl.addEventListener('input', () => { syncLenLabel(); loadCardSet(); });
+    countSelect.addEventListener('change', loadCardSet);
+
+    buildAlphabet();
+    syncLenLabel();
+    loadDecks();
+  </script>
+</body>
+</html>

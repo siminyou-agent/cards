@@ -1,0 +1,35 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS / Editor
+.DS_Store
+.vscode/
+.idea/
+
+# Build / cache
+dist/
+build/
+.cache/
+
+# Runtime data
+*.pid
+*.seed
+
+# Local app data
+/data/*.db
+/data/*.db-*
+/data/*.sqlite
+/data/*.sqlite-*
+/data/ipa-cache.json
+
+# Coverage
+coverage/
