@@ -190,7 +190,7 @@
     const rangeFill = document.getElementById('rangeFill');
     const countSelect = document.getElementById('countSelect');
 
-    let selectedLetter = 'A';
+    let selectedLetters = new Set(['A']);
     let cardQueue = [];
     let currentIndex = -1;
     let decksData = [];
@@ -215,9 +215,17 @@
 
     function buildAlphabet() {
       const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-      alphabetEl.innerHTML = letters.map(l => `<button class="letter-btn ${l===selectedLetter?'active':''}" data-letter="${l}">${l}</button>`).join('');
+      alphabetEl.innerHTML = letters.map(l => `<button class="letter-btn ${selectedLetters.has(l)?'active':''}" data-letter="${l}">${l}</button>`).join('');
       alphabetEl.querySelectorAll('.letter-btn').forEach(btn => btn.addEventListener('click', async () => {
-        selectedLetter = btn.dataset.letter;
+        const letter = btn.dataset.letter;
+        if (selectedLetters.has(letter)) {
+          selectedLetters.delete(letter);
+        } else {
+          selectedLetters.add(letter);
+        }
+        if (selectedLetters.size === 0) {
+          selectedLetters = new Set(['A']);
+        }
         buildAlphabet();
         await loadCardSet();
       }));
@@ -248,7 +256,7 @@
 
       cardQueue = shuffle(cardsData.filter(card => {
         if (card.deck_id !== deckId) return false;
-        if (selectedLetter && !card.word.toUpperCase().startsWith(selectedLetter)) return false;
+        if (selectedLetters.size > 0 && !selectedLetters.has(card.word[0]?.toUpperCase())) return false;
         if (Number.isInteger(minLen) && minLen > 0 && card.word.length < minLen) return false;
         if (Number.isInteger(maxLen) && maxLen > 0 && card.word.length > maxLen) return false;
         return true;
@@ -273,7 +281,8 @@
     function nextCard() {
       if (!cardQueue.length) {
         cardEl.classList.remove('flipped');
-        frontText.textContent = `${selectedLetter}...`;
+        const letterLabel = Array.from(selectedLetters).sort().join(',');
+        frontText.textContent = `${letterLabel}...`;
         backMeaning.textContent = 'No cards for these filters';
         backWord.textContent = 'Open settings and adjust';
         backExample.textContent = '';
