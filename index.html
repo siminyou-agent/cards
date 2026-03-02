@@ -274,9 +274,9 @@
       const card = cardQueue[currentIndex];
       cardEl.classList.remove('flipped');
       frontText.textContent = card.word;
-      backMeaning.textContent = card.phonics || '(phonics pending)';
+      backMeaning.textContent = card.example || '(sound-out pending)';
       backWord.textContent = `Word: ${card.word}`;
-      backExample.textContent = card.example ? `Sound-out: ${card.example}` : '';
+      backExample.textContent = card.phonics ? `Phonics: ${card.phonics}` : '';
     }
 
     function nextCard() {
@@ -293,9 +293,9 @@
       const card = cardQueue[currentIndex];
       cardEl.classList.remove('flipped');
       frontText.textContent = card.word;
-      backMeaning.textContent = card.phonics || '(phonics pending)';
+      backMeaning.textContent = card.example || '(sound-out pending)';
       backWord.textContent = `Word: ${card.word}`;
-      backExample.textContent = card.example ? `Sound-out: ${card.example}` : '';
+      backExample.textContent = card.phonics ? `Phonics: ${card.phonics}` : '';
     }
 
     cardEl.addEventListener('click', () => cardEl.classList.toggle('flipped'));
