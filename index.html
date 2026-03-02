@@ -275,7 +275,7 @@
       frontText.textContent = card.word;
       backMeaning.textContent = card.phonics || '(phonics pending)';
       backWord.textContent = `Word: ${card.word}`;
-      backExample.textContent = `Sound-out: ${card.example || '(pending)'}`;
+      backExample.textContent = card.example ? `Sound-out: ${card.example}` : '';
     }
 
     function nextCard() {
@@ -294,7 +294,7 @@
       frontText.textContent = card.word;
       backMeaning.textContent = card.phonics || '(phonics pending)';
       backWord.textContent = `Word: ${card.word}`;
-      backExample.textContent = `Sound-out: ${card.example || '(pending)'}`;
+      backExample.textContent = card.example ? `Sound-out: ${card.example}` : '';
     }
 
     cardEl.addEventListener('click', () => cardEl.classList.toggle('flipped'));
